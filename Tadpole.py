@@ -280,16 +280,10 @@ class Client:
         '''Login to tadpoles.com and download all user's images.
         '''
         self.navigate_url(self.ROOT_URL)
-
-#         try:
-#             self.load_cookies()
-#             self.add_cookies_to_browser()
-#         except (OSError, IOError):
         self.logger.info("Creating new cookies")
         self.do_login()
         self.dump_cookies()
         self.add_cookies_to_browser()
-#         else:
         self.navigate_url(self.HOME_URL)
 
         # Get the cookies ready for requests lib.
