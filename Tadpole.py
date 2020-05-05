@@ -200,81 +200,82 @@ class Client:
         '''
 
         # Make the local filename.
-        _, key = url.split("key=")
-        year_text = self.__current_year__.text
-        month_text = self.__current_month__.text
-        # year_test and month_test are same in format like: may\n2018
-        if '\n' in year_text:
-            year_text = year_text.splitlines()[1]
-        
-        if '\n' in month_text:
-            month_text = month_text.splitlines()[0]
+        if "key=" in url:
+            _, key = url.split("key=")
+            year_text = self.__current_year__.text
+            month_text = self.__current_month__.text
+            # year_test and month_test are same in format like: may\n2018
+            if '\n' in year_text:
+                year_text = year_text.splitlines()[1]
             
-        filename_parts = ['download', year_text, month_text, 'tadpoles-%s-%s-%s.%s']
-        filename_jpg = abspath(join(*filename_parts) % (year_text, month_text, key, 'jpg'))
-
-        # we might even get a png file even though the mime type is jpeg.
-        filename_png = abspath(join(*filename_parts) % (year_text, month_text, key, 'png'))
-
-        # We don't know if we have a video or image yet so create both name
-        filename_video = abspath(join(*filename_parts) % (year_text, month_text, key, 'mp4'))
-
-        # Only download if the file doesn't already exist.
-        if isfile(filename_jpg):
-            self.logger.info("Already downloaded image: %s", filename_jpg)
-            return
-        if isfile(filename_video):
-            self.logger.info("Already downloaded video: %s", filename_video)
-            return
-        if isfile(filename_png):
-            self.logger.info("Already downloaded png file: %s", filename_png)
-            return
-
-        self.logger.info("Downloading from: %s", url)
-
-        # Make sure the parent dir exists.
-        directory = dirname(filename_jpg)
-        if not isdir(directory):
-            os.makedirs(directory)
-
-        # Sleep to avoid bombarding the server
-        self.sleep(1, 3)
-
-        # Download it with requests.
-        while True:
-            resp = requests.get(url, cookies=self.req_cookies, stream=True)
-            if resp.status_code == 200:
-                file = None
-                try:
-                    content_type = resp.headers['content-type']
-
-                    self.logger.info("Content Type: %s.", content_type)
-
-                    if content_type == 'image/jpeg':
-                        filename = filename_jpg
-                    elif content_type == 'image/png':
-                        filename = filename_png
-                    elif content_type == 'video/mp4':
-                        filename = filename_video
-                    else:
-                        self.logger.warning("Unsupported content type: %s", content_type)
-                        return
-
-                    for chunk in resp.iter_content(1024):
-                        if file is None:
-                            self.logger.info("Saving: %s", filename)
-                            file = open(filename, 'wb')
-                        file.write(chunk)
-
-                    self.logger.info("Finished saving %s", filename)
-                finally:
-                    if file is not None:
-                        file.close()
-                break
-            else:
-                msg = 'Error downloading %r. Retrying.'
-                self.logger.warning(msg, url)
-                self.sleep(1, 5)
+            if '\n' in month_text:
+                month_text = month_text.splitlines()[0]
+                
+            filename_parts = ['download', year_text, month_text, 'tadpoles-%s-%s-%s.%s']
+            filename_jpg = abspath(join(*filename_parts) % (year_text, month_text, key, 'jpg'))
+    
+            # we might even get a png file even though the mime type is jpeg.
+            filename_png = abspath(join(*filename_parts) % (year_text, month_text, key, 'png'))
+    
+            # We don't know if we have a video or image yet so create both name
+            filename_video = abspath(join(*filename_parts) % (year_text, month_text, key, 'mp4'))
+    
+            # Only download if the file doesn't already exist.
+            if isfile(filename_jpg):
+                self.logger.info("Already downloaded image: %s", filename_jpg)
+                return
+            if isfile(filename_video):
+                self.logger.info("Already downloaded video: %s", filename_video)
+                return
+            if isfile(filename_png):
+                self.logger.info("Already downloaded png file: %s", filename_png)
+                return
+    
+            self.logger.info("Downloading from: %s", url)
+    
+            # Make sure the parent dir exists.
+            directory = dirname(filename_jpg)
+            if not isdir(directory):
+                os.makedirs(directory)
+    
+            # Sleep to avoid bombarding the server
+            self.sleep(1, 3)
+    
+            # Download it with requests.
+            while True:
+                resp = requests.get(url, cookies=self.req_cookies, stream=True)
+                if resp.status_code == 200:
+                    file = None
+                    try:
+                        content_type = resp.headers['content-type']
+    
+                        self.logger.info("Content Type: %s.", content_type)
+    
+                        if content_type == 'image/jpeg':
+                            filename = filename_jpg
+                        elif content_type == 'image/png':
+                            filename = filename_png
+                        elif content_type == 'video/mp4':
+                            filename = filename_video
+                        else:
+                            self.logger.warning("Unsupported content type: %s", content_type)
+                            return
+    
+                        for chunk in resp.iter_content(1024):
+                            if file is None:
+                                self.logger.info("Saving: %s", filename)
+                                file = open(filename, 'wb')
+                            file.write(chunk)
+    
+                        self.logger.info("Finished saving %s", filename)
+                    finally:
+                        if file is not None:
+                            file.close()
+                    break
+                else:
+                    msg = 'Error downloading %r. Retrying.'
+                    self.logger.warning(msg, url)
+                    self.sleep(1, 5)
 
     def download_images(self):
         '''Login to tadpoles.com and download all user's images.
